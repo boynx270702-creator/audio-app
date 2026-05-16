@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: storyverse_postgres
+    environment:
+      POSTGRES_USER: storyverse
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: storyverse
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - storyverse_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: storyverse_redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    networks:
+      - storyverse_network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: storyverse_rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: storyverse
+      RABBITMQ_DEFAULT_PASS: password
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - storyverse_network
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.6
+    container_name: storyverse_meilisearch
+    environment:
+      MEILI_MASTER_KEY: masterKey
+      MEILI_ENV: development
+    ports:
+      - '7700:7700'
+    volumes:
+      - meilisearch_data:/meili_data
+    networks:
+      - storyverse_network
+
+  minio:
+    image: minio/minio:latest
+    container_name: storyverse_minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio_data:/data
+    networks:
+      - storyverse_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  meilisearch_data:
+  minio_data:
+
+networks:
+  storyverse_network:
+    driver: bridge

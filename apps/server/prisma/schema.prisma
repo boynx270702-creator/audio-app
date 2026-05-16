@@ -1,0 +1,546 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String            @id @default(uuid())
+  email            String            @unique
+  passwordHash     String?
+  authProvider     AuthProvider      @default(LOCAL)
+  status           UserStatus        @default(ACTIVE)
+  role             UserRole          @default(USER)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  bookmarks        Bookmark[]
+  comments         Comment[]
+  devices          Device[]
+  guildMemberships GuildMember[]
+  likes            Like[]
+  profile          Profile?
+  readingHistory   ReadingHistory[]
+  sessions         Session[]
+  userCharacters   UserCharacter[]
+  gamification     UserGamification?
+  userQuests       UserQuest[]
+  vipStatus        VipSubscription?
+  wallet           Wallet?
+
+  @@map("users")
+}
+
+model Profile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  displayName String
+  avatarUrl   String?
+  bio         String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("profiles")
+}
+
+model Device {
+  id           String   @id @default(uuid())
+  userId       String
+  deviceId     String   @unique
+  deviceType   String
+  osVersion    String
+  appVersion   String
+  lastActiveAt DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@map("devices")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  refreshToken String   @unique
+  expiresAt    DateTime
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@map("sessions")
+}
+
+model Story {
+  id             String           @id @default(uuid())
+  title          String
+  slug           String           @unique
+  description    String
+  coverImage     String?
+  status         StoryStatus      @default(ONGOING)
+  authorId       String
+  publisherId    String?
+  viewCount      Int              @default(0)
+  rating         Float            @default(0.0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  bannerImage    String?
+  bookmarks      Bookmark[]
+  chapters       Chapter[]
+  readingHistory ReadingHistory[]
+  author         Author           @relation(fields: [authorId], references: [id])
+  publisher      Publisher?       @relation(fields: [publisherId], references: [id])
+  categories     StoryCategory[]
+  tags           StoryTag[]
+
+  @@map("stories")
+}
+
+model Chapter {
+  id             String           @id @default(uuid())
+  storyId        String
+  chapterNumber  Int
+  title          String
+  content        String
+  wordCount      Int
+  priceCoins     Int              @default(0)
+  status         ChapterStatus    @default(DRAFT)
+  unlockType     UnlockType       @default(FREE)
+  publishedAt    DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  audio          Audio?
+  story          Story            @relation(fields: [storyId], references: [id])
+  readingHistory ReadingHistory[]
+
+  @@unique([storyId, chapterNumber])
+  @@map("chapters")
+}
+
+model Author {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  bio       String?
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  stories   Story[]
+
+  @@map("authors")
+}
+
+model Publisher {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  website     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  stories     Story[]
+
+  @@map("publishers")
+}
+
+model Category {
+  id          String          @id @default(uuid())
+  name        String
+  slug        String          @unique
+  description String?
+  createdAt   DateTime        @default(now())
+  stories     StoryCategory[]
+
+  @@map("categories")
+}
+
+model StoryCategory {
+  storyId    String
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  story      Story    @relation(fields: [storyId], references: [id])
+
+  @@id([storyId, categoryId])
+  @@map("story_categories")
+}
+
+model Tag {
+  id        String     @id @default(uuid())
+  name      String
+  slug      String     @unique
+  createdAt DateTime   @default(now())
+  stories   StoryTag[]
+
+  @@map("tags")
+}
+
+model StoryTag {
+  storyId String
+  tagId   String
+  story   Story  @relation(fields: [storyId], references: [id])
+  tag     Tag    @relation(fields: [tagId], references: [id])
+
+  @@id([storyId, tagId])
+  @@map("story_tags")
+}
+
+model ReadingHistory {
+  id          String   @id @default(uuid())
+  userId      String
+  storyId     String
+  chapterId   String
+  progressPct Float    @default(0.0)
+  lastReadAt  DateTime @default(now())
+  chapter     Chapter  @relation(fields: [chapterId], references: [id])
+  story       Story    @relation(fields: [storyId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, storyId])
+  @@map("reading_history")
+}
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  userId    String
+  storyId   String
+  createdAt DateTime @default(now())
+  story     Story    @relation(fields: [storyId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, storyId])
+  @@map("bookmarks")
+}
+
+model Audio {
+  id          String   @id @default(uuid())
+  chapterId   String   @unique
+  voiceId     String
+  audioUrl    String
+  durationSec Int
+  fileSize    Int
+  createdAt   DateTime @default(now())
+  chapter     Chapter  @relation(fields: [chapterId], references: [id])
+
+  @@map("audios")
+}
+
+model Wallet {
+  id           String        @id @default(uuid())
+  userId       String        @unique
+  linhThach    Int           @default(0)
+  tienNgoc     Int           @default(0)
+  thanTinh     Int           @default(0)
+  coVat        Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+  user         User          @relation(fields: [userId], references: [id])
+
+  @@map("wallets")
+}
+
+model Transaction {
+  id          String            @id @default(uuid())
+  walletId    String
+  type        TransactionType
+  currency    CurrencyType
+  amount      Int
+  description String?
+  metadata    Json?
+  status      TransactionStatus @default(PENDING)
+  createdAt   DateTime          @default(now())
+  wallet      Wallet            @relation(fields: [walletId], references: [id])
+
+  @@map("transactions")
+}
+
+model DailyActivity {
+  id          String   @id @default(uuid())
+  userId      String
+  date        DateTime @db.Date
+  secondsRead Int      @default(0)
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@map("daily_activities")
+}
+
+model DailyQuest {
+  id             String       @id @default(uuid())
+  name           String
+  description    String?
+  targetSeconds  Int
+  rewardAmount   Int
+  rewardCurrency CurrencyType @default(LINH_THACH)
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  period         QuestPeriod  @default(DAILY)
+  milestone      Int          @default(1)
+  targetCount    Int          @default(0)
+  type           QuestType    @default(READING)
+  userQuests     UserQuest[]
+
+  @@map("daily_quests")
+}
+
+model UserQuest {
+  id          String     @id @default(uuid())
+  userId      String
+  questId     String
+  date        DateTime   @db.Date
+  isCompleted Boolean    @default(false)
+  isClaimed   Boolean    @default(false)
+  completedAt DateTime?
+  claimedAt   DateTime?
+  quest       DailyQuest @relation(fields: [questId], references: [id])
+  user        User       @relation(fields: [userId], references: [id])
+
+  @@unique([userId, questId, date])
+  @@map("user_quests")
+}
+
+model VipSubscription {
+  id        String             @id @default(uuid())
+  userId    String             @unique
+  planId    String
+  startDate DateTime           @default(now())
+  endDate   DateTime
+  status    SubscriptionStatus @default(ACTIVE)
+  plan      VipPlan            @relation(fields: [planId], references: [id])
+  user      User               @relation(fields: [userId], references: [id])
+
+  @@map("vip_subscriptions")
+}
+
+model VipPlan {
+  id            String            @id @default(uuid())
+  name          String
+  description   String?
+  priceFiat     Decimal
+  durationDays  Int
+  createdAt     DateTime          @default(now())
+  subscriptions VipSubscription[]
+
+  @@map("vip_plans")
+}
+
+model Comment {
+  id         String            @id @default(uuid())
+  userId     String
+  targetId   String
+  targetType CommentTargetType
+  content    String
+  parentId   String?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  parent     Comment?          @relation("CommentReplies", fields: [parentId], references: [id])
+  replies    Comment[]         @relation("CommentReplies")
+  user       User              @relation(fields: [userId], references: [id])
+  likes      Like[]
+
+  @@map("comments")
+}
+
+model Like {
+  id         String         @id @default(uuid())
+  userId     String
+  targetId   String
+  targetType LikeTargetType
+  createdAt  DateTime       @default(now())
+  commentId  String?
+  Comment    Comment?       @relation(fields: [commentId], references: [id])
+  user       User           @relation(fields: [userId], references: [id])
+
+  @@unique([userId, targetId, targetType])
+  @@map("likes")
+}
+
+model Guild {
+  id          String        @id @default(uuid())
+  name        String
+  description String?
+  level       Int           @default(1)
+  createdAt   DateTime      @default(now())
+  members     GuildMember[]
+
+  @@map("guilds")
+}
+
+model GuildMember {
+  id       String    @id @default(uuid())
+  guildId  String
+  userId   String
+  role     GuildRole @default(MEMBER)
+  joinedAt DateTime  @default(now())
+  guild    Guild     @relation(fields: [guildId], references: [id])
+  user     User      @relation(fields: [userId], references: [id])
+
+  @@unique([guildId, userId])
+  @@map("guild_members")
+}
+
+model UserGamification {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  rank          RankTier @default(PHAM_NHAN)
+  currentXp     Int      @default(0)
+  dailyXpEarned Int      @default(0)
+  lastXpDate    DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@map("user_gamification")
+}
+
+model Character {
+  id             String          @id @default(uuid())
+  name           String
+  rarity         CharacterRarity @default(COMMON)
+  description    String?
+  basePower      Int             @default(10)
+  imageUrl       String?
+  createdAt      DateTime        @default(now())
+  userCharacters UserCharacter[]
+
+  @@map("characters")
+}
+
+model UserCharacter {
+  id          String    @id @default(uuid())
+  userId      String
+  characterId String
+  level       Int       @default(1)
+  shards      Int       @default(0)
+  acquiredAt  DateTime  @default(now())
+  character   Character @relation(fields: [characterId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@unique([userId, characterId])
+  @@map("user_characters")
+}
+
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+  FACEBOOK
+  APPLE
+}
+
+enum UserStatus {
+  ACTIVE
+  BANNED
+  INACTIVE
+}
+
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum StoryStatus {
+  ONGOING
+  COMPLETED
+  DROPPED
+  PAUSED
+}
+
+enum ChapterStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum UnlockType {
+  FREE
+  POINT
+  COIN
+  GEM
+  VIP
+  EVENT
+  LIMITED
+}
+
+enum QuestType {
+  READING
+  COMMENTING
+  SHARING
+  VOTING
+  UNLOCKING
+  STREAK
+  ADMIN_ADJUST
+}
+
+enum QuestPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+  ONCE
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  PURCHASE_CHAPTER
+  REWARD
+  REFUND
+}
+
+enum CurrencyType {
+  LINH_THACH
+  TIEN_NGOC
+  THAN_TINH
+  CO_VAT
+  FIAT
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELED
+}
+
+enum CommentTargetType {
+  STORY
+  CHAPTER
+}
+
+enum LikeTargetType {
+  STORY
+  CHAPTER
+  COMMENT
+}
+
+enum GuildRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum RankTier {
+  PHAM_NHAN
+  LUYEN_KHI
+  TRUC_CO
+  KIM_DAN
+  NGUYEN_ANH
+  HOA_THAN
+  DO_KIEP
+  PHI_THANG
+  CHAN_TIEN
+  TIEN_DE
+}
+
+enum CharacterRarity {
+  COMMON
+  RARE
+  EPIC
+  LEGENDARY
+  MYTHIC
+}

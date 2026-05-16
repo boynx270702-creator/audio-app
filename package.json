@@ -1,0 +1,26 @@
+{
+  "name": "storyverse",
+  "version": "1.0.0",
+  "private": true,
+  "description": "StoryVerse - Reading Platform Enterprise",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "husky": "^9.0.0",
+    "prettier": "^3.0.0",
+    "lint-staged": "^15.0.0",
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "packageManager": "pnpm@9.0.0"
+}
