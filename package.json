@@ -8,7 +8,7 @@
     "build": "turbo run build",
     "build:server": "pnpm --filter server build",
     "build:web": "pnpm --filter web build",
-    "start": "echo 'Please use start:server or start:web'",
+    "start": "npm run start:server",
     "start:server": "cd apps/server && npx prisma db push && pnpm start:prod",
     "start:web": "pnpm --filter web start",
     "lint": "turbo run lint",
