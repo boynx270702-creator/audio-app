@@ -105,8 +105,8 @@ export default function SettingsPage() {
               <div className="flex flex-col md:flex-row gap-8 items-start">
                 <div className="relative group">
                   <div className="h-24 w-24 rounded-md bg-neutral-900 border border-white/[0.1] flex items-center justify-center overflow-hidden">
-                    {user?.profile?.avatar ? (
-                      <img src={user.profile.avatar} className="h-full w-full object-cover" />
+                    {user?.profile?.avatarUrl ? (
+                      <img src={user.profile.avatarUrl} className="h-full w-full object-cover" />
                     ) : (
                       <User className="h-10 w-10 text-neutral-700" />
                     )}
