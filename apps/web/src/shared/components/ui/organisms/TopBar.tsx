@@ -176,8 +176,8 @@ export function TopBar({ className, onMenuClick }: TopBarProps) {
               className="flex items-center p-0.5 rounded-full hover:ring-2 hover:ring-primary/50 transition-all"
             >
               <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center border border-white/10 text-xs font-black text-white overflow-hidden">
-                {user?.profile?.avatar ? (
-                  <img src={user.profile.avatar} className="h-full w-full object-cover" />
+                {user?.profile?.avatarUrl ? (
+                  <img src={user.profile.avatarUrl} className="h-full w-full object-cover" />
                 ) : (
                   user?.profile?.displayName?.[0] || 'U'
                 )}
