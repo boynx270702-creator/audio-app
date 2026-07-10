@@ -6,7 +6,7 @@ import { Button } from '@/shared/components/ui/atoms/Button';
 import { 
   Wallet, Search, ArrowUpRight, ArrowDownLeft, 
   History, CreditCard, Gem, Zap, Coins,
-  Plus, Minus, Filter
+  Plus, Minus, Filter, X
 } from 'lucide-react';
 import { Portal } from '@/shared/components/ui/atoms/Portal';
 import { AdminPagination } from '@/shared/components/ui/organisms/AdminPagination';
