@@ -86,6 +86,8 @@ export default function ReaderPage() {
       const wordCount = chapter.content?.split(/\s+/)?.length || 0;
       setTrack({
         id: chapter.id,
+        slug: params.slug as string,
+        chapterNumber: Number(chapterNum),
         chapterTitle: chapter.title,
         storyTitle: story.title,
         author: story.author?.name || 'StoryVerse',
