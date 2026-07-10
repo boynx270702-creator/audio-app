@@ -102,7 +102,7 @@ function QuestCard({ quest, onClaim }: { quest: any; onClaim: (id: string) => vo
           "bg-white/[0.03] border-white/[0.08] group-hover:bg-primary/10 group-hover:border-primary/20"
         )}>
           {isClaimed ? <CheckCircle2 className="h-6 w-6 text-green-400" /> : 
-           React.cloneElement(getIcon() as React.ReactElement, { 
+           React.cloneElement(getIcon() as React.ReactElement<any>, { 
              className: cn("h-6 w-6 transition-colors", isDone ? "text-gold" : "text-t2 group-hover:text-primary") 
            })}
         </div>
