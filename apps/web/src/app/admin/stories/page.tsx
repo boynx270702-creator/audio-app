@@ -261,8 +261,8 @@ export default function AdminStoriesPage() {
         let tempCategoryNames: string[] = [];
         if (json.categories) {
           const catNames = typeof json.categories === 'string'
-            ? json.categories.split(',').map(s => s.trim())
-            : Array.isArray(json.categories) ? json.categories.map(s => String(s).trim()) : [];
+            ? json.categories.split(',').map((s: string) => s.trim())
+            : Array.isArray(json.categories) ? json.categories.map((s: any) => String(s).trim()) : [];
 
           const matchedIds: string[] = [];
           const missingNames: string[] = [];
