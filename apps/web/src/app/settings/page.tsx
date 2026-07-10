@@ -136,7 +136,7 @@ export default function SettingsPage() {
                     <label className="text-xs font-bold text-neutral-500 ml-1">{t.settings.bio}</label>
                     <textarea
                       defaultValue={(user?.profile as any)?.bio || ''}
-                      placeholder={t.settings.bioPlaceholder}
+                      placeholder={(t.settings as any).bioPlaceholder}
                       className="w-full h-24 rounded-md border border-white/[0.1] bg-white/[0.04] p-4 text-sm font-medium text-neutral-200 outline-none focus:border-primary/50 focus:bg-white/[0.06] transition-all resize-none"
                     />
                   </div>
