@@ -14,13 +14,17 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         where: { email: 'hieunt270702@gmail.com' },
         update: { 
           role: 'ADMIN',
-          password: hashedPassword 
+          passwordHash: hashedPassword 
         },
         create: {
           email: 'hieunt270702@gmail.com',
-          password: hashedPassword,
-          name: 'Admin Hieu',
-          role: 'ADMIN'
+          passwordHash: hashedPassword,
+          role: 'ADMIN',
+          profile: {
+            create: {
+              displayName: 'Admin Hieu'
+            }
+          }
         }
       });
       console.log('Default admin seeded/updated successfully');
