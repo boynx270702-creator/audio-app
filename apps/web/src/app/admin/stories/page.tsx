@@ -267,7 +267,7 @@ export default function AdminStoriesPage() {
           const matchedIds: string[] = [];
           const missingNames: string[] = [];
 
-          catNames.forEach(name => {
+          catNames.forEach((name: string) => {
             const match = allCategories.find(c => c.name.toLowerCase() === name.toLowerCase());
             if (match) matchedIds.push(match.id);
             else missingNames.push(name);
