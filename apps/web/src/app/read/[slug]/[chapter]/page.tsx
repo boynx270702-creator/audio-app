@@ -34,7 +34,7 @@ const THEMES: ReaderThemeConfig[] = [
 export default function ReaderPage() {
   const params = useParams<{ slug: string; chapter: string }>();
   const router = useRouter();
-  const { setTrack, track, activeCharIndex, isPlaying } = useAudioStore();
+  const { setTrack, track, isPlaying } = useAudioStore();
   const { user, isAuthenticated } = useAuthStore();
   const { saveProgress } = useReadingStore();
   
@@ -135,57 +135,7 @@ export default function ReaderPage() {
 
   const currentTheme = THEMES.find(t => t.id === readerTheme) || THEMES[0];
 
-  // Logic for word-by-word highlighting
-  const wordsWithOffsets = React.useMemo(() => {
-    if (!chapter?.content) return [];
-    let currentOffset = 0;
-    const result = [];
-    
-    const paragraphs = chapter.content.split('\n');
-    
-    for (let pIdx = 0; pIdx < paragraphs.length; pIdx++) {
-      const p = paragraphs[pIdx];
-      if (!p.trim()) {
-        currentOffset += p.length + 1; // +1 for newline
-        result.push({ isParagraph: true, words: [] });
-        continue;
-      }
-      
-      const words = [];
-      const parts = p.split(/(\s+)/); // Keep spaces
-      
-      for (const part of parts) {
-        words.push({
-          text: part,
-          start: currentOffset,
-          end: currentOffset + part.length,
-          isSpace: /^\s+$/.test(part)
-        });
-        currentOffset += part.length;
-      }
-      
-      result.push({ isParagraph: true, words });
-      currentOffset += 1; // for newline
-    }
-    return result;
-  }, [chapter?.content]);
-
-  const activeWordStart = React.useMemo(() => {
-    if (!isPlaying || !track || track.id !== chapter?.id) return -1;
-    let activeStart = -1;
-    for (const p of wordsWithOffsets) {
-      for (const w of p.words) {
-        if (!w.isSpace) {
-          if (w.start <= activeCharIndex) {
-            activeStart = w.start;
-          } else {
-            return activeStart;
-          }
-        }
-      }
-    }
-    return activeStart;
-  }, [activeCharIndex, isPlaying, wordsWithOffsets, track?.id, chapter?.id]);
+  // Removed word-by-word highlighting logic for better performance
 
   if (isLoading) {
     return (
@@ -363,25 +313,11 @@ export default function ReaderPage() {
                 color: currentTheme.text,
               }}
             >
-              {wordsWithOffsets.map((p, pIdx) => {
-                if (!p.words.length) return null;
+              {chapter.content.split('\n').map((p: string, pIdx: number) => {
+                if (!p.trim()) return null;
                 return (
                   <p key={pIdx} className="mb-8 leading-relaxed text-justify">
-                    {p.words.map((w, wIdx) => {
-                      if (w.isSpace) return w.text;
-                      const isActive = activeWordStart === w.start;
-                      return (
-                        <span 
-                          key={wIdx}
-                          className={cn(
-                            "transition-colors duration-200 ease-out",
-                            isActive ? "text-primary-light" : ""
-                          )}
-                        >
-                          {w.text}
-                        </span>
-                      );
-                    })}
+                    {p}
                   </p>
                 );
               })}

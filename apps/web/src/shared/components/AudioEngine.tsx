@@ -51,21 +51,26 @@ export function AudioEngine() {
     const audio = audioRef.current;
 
     const onTimeUpdate = () => {
-      if (isRestoringRef.current) return;
       const store = useAudioStore.getState();
+      
+      // If we are restoring, we should only wait if audio time is extremely close to 0
+      // meaning it hasn't seeked yet. But if it has passed 0.5s, we can consider it restored
+      // or playing normally.
+      if (isRestoringRef.current) {
+        if (audio.currentTime < 0.5) return;
+        isRestoringRef.current = false;
+      }
+
       updateCurrentTime(audio.currentTime);
       
       // Accurately update activeCharIndex for Cloud TTS based on stable duration
       if (store.track?.content && activeEngineRef.current === 'cloud') {
-        // Use estimated durationSec from store as absolute truth to prevent chaotic jumps 
-        // caused by the browser recalculating VBR/chunked stream duration.
         const stableDuration = store.track.durationSec || 1;
         const progress = audio.currentTime / stableDuration;
         const estimatedChar = Math.floor(progress * store.track.content.length);
         
-        // Only update if difference is noticeable, preventing micro-jitters
         const diff = estimatedChar - store.activeCharIndex;
-        if (Math.abs(diff) > 15 || diff < 0) { // allow backward if user seeked
+        if (Math.abs(diff) > 15 || diff < 0) { 
           setActiveCharIndex(Math.max(0, Math.min(estimatedChar, store.track.content.length)));
         }
       }
@@ -93,7 +98,13 @@ export function AudioEngine() {
     };
 
     const onError = (e: any) => {
+      const store = useAudioStore.getState();
+      if (!store.track || !audio.src || audio.src === window.location.href) return;
+
       const error = audio.error;
+      // Ignore MEDIA_ERR_ABORTED (1) and MEDIA_ERR_SRC_NOT_SUPPORTED (4) during track switch/cleanup
+      if (error?.code === 1 || error?.code === 4) return;
+
       console.error('[AudioEngine] Audio Element Error:', {
         code: error?.code,
         message: error?.message,
@@ -186,7 +197,15 @@ export function AudioEngine() {
 
   // Sync Track Change or Voice Preference Change
   React.useEffect(() => {
-    if (!track) return;
+    if (!track) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.removeAttribute('src');
+      }
+      synthRef.current?.cancel();
+      activeEngineRef.current = 'none';
+      return;
+    }
     
     const isNewTrack = track.id !== lastTrackId;
     // On page reload, lastTrackId is null (React state reset) but store has saved currentTime.
@@ -216,7 +235,9 @@ export function AudioEngine() {
         }
         audio.src = track.audioUrl;
         audio.playbackRate = speed;
-        if (isPlaying) audio.play().catch(() => {});
+        if (isPlaying) audio.play().catch((err) => {
+          if (err.name === 'AbortError') return;
+        });
       }
     } 
     // Mode: Cloud TTS (High-quality AI)
@@ -237,6 +258,7 @@ export function AudioEngine() {
         
         if (isPlaying) {
           audio.play().catch((err) => {
+            if (err.name === 'AbortError') return;
             console.error('[AudioEngine] Play Error:', err);
             activeEngineRef.current = 'browser';
             if (fallbackToBrowserTTSRef.current) fallbackToBrowserTTSRef.current();
@@ -295,13 +317,18 @@ export function AudioEngine() {
 
   // Sync Play/Pause
   React.useEffect(() => {
-    if (!track) return;
+    if (!track) {
+      audioRef.current?.pause();
+      synthRef.current?.cancel();
+      return;
+    }
     const audio = audioRef.current;
     if (!audio) return;
 
     if (activeEngineRef.current === 'mp3' || activeEngineRef.current === 'cloud') {
       if (isPlaying) {
-        audio.play().catch(() => {
+        audio.play().catch((err) => {
+          if (err.name === 'AbortError') return;
           if (activeEngineRef.current === 'cloud') {
             activeEngineRef.current = 'browser';
             pause();
@@ -384,8 +411,7 @@ export function AudioEngine() {
 
   // TTS Progress Simulator (Only used for Browser TTS to update progress bar)
   React.useEffect(() => {
-    // If it's playing via <audio> tag (MP3 or Cloud TTS), timeupdate handles it.
-    if (!track || !isPlaying || audioRef.current?.src) return;
+    if (!track || !isPlaying || activeEngineRef.current !== 'browser') return;
 
     let lastTime = Date.now();
     let frameId: number;
