@@ -94,6 +94,8 @@ export const dictionaries = {
       changePassword: 'Đổi mật khẩu',
       save: 'Lưu thay đổi',
       discard: 'Hủy bỏ',
+      bioPlaceholder: 'Nhập vài dòng giới thiệu về bản thân...',
+      readerSettings: 'Cài đặt trình đọc',
       theme: {
         title: 'Chế độ hiển thị',
         dark: 'Tối',
@@ -176,6 +178,8 @@ export const dictionaries = {
       changePassword: 'Change Password',
       save: 'Save Changes',
       discard: 'Discard',
+      bioPlaceholder: 'Write a few words about yourself...',
+      readerSettings: 'Reader Settings',
       theme: {
         title: 'Theme Mode',
         dark: 'Dark',
